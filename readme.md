@@ -15,5 +15,7 @@ git branch -d feat/git
 git checkout -b release-1.0 develop
 ```
 
-# my suggestion
-# Final suggestion
+# Hotfixes
+```bash
+git checkout -b hotfix-1.2.1 master
+```
