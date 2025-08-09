@@ -1,0 +1,3 @@
+[text](https://nvie.com/posts/a-successful-git-branching-model/)
+
+Model=Git branching strategy; main branches: main(production-ready, tagged releases), develop(integration, latest dev changes). Support branches: feature(branch off develop, merge into develop), release(branch off develop when release planned, bugfix, metadata, merge into main+develop), hotfix(branch off main for urgent production fixes, merge into main+develop). Workflow: new work in feature branches, integrated into develop; release branches stabilize; main updated only by merges from release/hotfix; tagging releases on main. Benefits: parallel dev, controlled releases, clear history. Tags=version numbers.
