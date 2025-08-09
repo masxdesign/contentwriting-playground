@@ -14,3 +14,5 @@ git branch -d feat/git
 ```bash
 git checkout -b release-1.0 develop
 ```
+
+# my suggestion
