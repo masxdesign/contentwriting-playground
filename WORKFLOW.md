@@ -20,66 +20,82 @@ Add these under the `[alias]` section of your `~/.gitconfig`:
 
 ```ini
 [alias]
-  # Common shortcuts
-  co = checkout
-  cb = checkout -b
-  br = branch
-  st = status -sb
-  lg = log --oneline --graph --decorate --all
+	ai-commit = "!~/.git-ai-commit.sh"
+	
+	# Common shortcuts
+	co = checkout
+	cb = checkout -b
+	br = branch
+	st = status -sb
+	lg = log --oneline --graph --decorate --all
 
-  # --- Feature ---
-  feature-start = "!f() { git checkout develop && git checkout -b feature/$1; }; f"
-  feature-finish = "!f() { \
-    git checkout develop && \
-    git merge --no-ff feature/$1 -m \"Merge feature $1\" && \
-    git branch -d feature/$1 && \
-    git push origin develop && \
-    git push origin --delete feature/$1; \
-  }; f"
+	# --- Feature ---
+	feature-start = "!f() { git checkout develop && git checkout -b feature/$1; }; f"
+	feature-finish = "!f() { \
+		git checkout develop && \
+		git merge --no-ff feature/$1 -m \"Merge feature $1\" && \
+		git branch -d feature/$1 && \
+		git push origin develop && \
+		git push origin --delete feature/$1; \
+	}; f"
 
-  # --- Release ---
-  release-start = "!f() { git checkout develop && git checkout -b release-$1; }; f"
-  release-finish = "!f() { \
-    git checkout main && \
-    git merge --no-ff release-$1 -m \"Release $1\" && \
-    git tag -a $1 -m \"Release $1\" && \
-    git checkout develop && \
-    git merge --no-ff release-$1 -m \"Merge release $1 back into develop\" && \
-    git branch -d release-$1 && \
-    git push origin main --tags && \
-    git push origin develop && \
-    git push origin --delete release-$1; \
-  }; f"
+	# --- Release ---
+	release-start = "!f() { git checkout develop && git checkout -b release-$1; }; f"
+	release-finish = "!f() { \
+		if git show-ref --verify --quiet refs/heads/main; then default=main; else default=master; fi; \
+		git checkout $default && \
+		git merge --no-ff release-$1 -m \"Release $1\" && \
+		git tag -a $1 -m \"Release $1\" && \
+		git checkout develop && \
+		git merge --no-ff release-$1 -m \"Merge release $1 back into develop\" && \
+		git branch -d release-$1 && \
+		git push origin $default --tags && \
+		git push origin develop; \
+		if git ls-remote --exit-code origin release-$1 >/dev/null 2>&1; then \
+		git push origin --delete release-$1; \
+		else \
+		echo 'ℹ️ Remote branch release-$1 already deleted'; \
+		fi; \
+	}; f"
 
-  # --- Hotfix ---
-  hotfix-start = "!f() { git checkout main && git checkout -b hotfix-$1; }; f"
-  hotfix-finish = "!f() { \
-    git checkout main && \
-    git merge --no-ff hotfix-$1 -m \"Hotfix $1\" && \
-    git tag -a $1 -m \"Hotfix $1\" && \
-    git checkout develop && \
-    git merge --no-ff hotfix-$1 -m \"Merge hotfix $1 into develop\" && \
-    git branch -d hotfix-$1 && \
-    git push origin main --tags && \
-    git push origin develop && \
-    git push origin --delete hotfix-$1; \
-  }; f"
+	# --- Hotfix ---
+	hotfix-start = "!f() { \
+		if git show-ref --verify --quiet refs/heads/main; then default=main; else default=master; fi; \
+		git checkout $default && \
+		git checkout -b hotfix-$1; \
+  	}; f"
+	hotfix-finish = "!f() { \
+		if git show-ref --verify --quiet refs/heads/main; then default=main; else default=master; fi; \
+		git checkout $default && \
+		git merge --no-ff hotfix-$1 -m \"Hotfix $1\" && \
+		git tag -a $1 -m \"Hotfix $1\" && \
+		git checkout develop && \
+		git merge --no-ff hotfix-$1 -m \"Merge hotfix $1 into develop\" && \
+		git branch -d hotfix-$1 && \
+		git push origin $default --tags && \
+		git push origin develop; \
+		if git ls-remote --exit-code origin hotfix-$1 >/dev/null 2>&1; then \
+		git push origin --delete hotfix-$1; \
+		else \
+		echo 'ℹ️ Remote branch hotfix-$1 already deleted'; \
+		fi; \
+	}; f"
 
-  # --- Update current feature with latest develop (rebase) ---
-  feature-update = "!f() { \
-    current=$(git rev-parse --abbrev-ref HEAD); \
-    if [[ $current != feature/* ]]; then \
-      echo '⚠️ Not on a feature branch (feature/*)'; exit 1; \
-    fi; \
-    git fetch origin develop && \
-    git checkout develop && git pull origin develop && \
-    git checkout $current && \
-    git rebase develop; \
-  }; f"
+	# --- Update current feature with latest develop (rebase) ---
+	feature-update = "!f() { \
+		current=$(git rev-parse --abbrev-ref HEAD); \
+		if [[ $current != feature/* ]]; then \
+		echo '⚠️ Not on a feature branch (feature/*)'; exit 1; \
+		fi; \
+		git fetch origin develop && \
+		git checkout develop && git pull origin develop && \
+		git checkout $current && \
+		git rebase develop; \
+	}; f"
 
-  # --- Cleanup ---
-  cleanup = "!git branch --merged | egrep -v '(^\\*|main|develop)' | xargs -n 1 git branch -d"
-  cleanup-remote = "!git fetch -p && git remote prune origin"
+	# --- Cleanup ---
+	cleanup = "!git branch --merged | egrep -v '(^\\*|master|main|develop)' | xargs -n 1 git branch -d"
+	cleanup-remote = "!git fetch -p && git remote prune origin"
 ```
 
 > **Note:** The `feature-finish`, `release-finish`, and `hotfix-finish` aliases push updates and delete the remote branch by design.
